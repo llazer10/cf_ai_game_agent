@@ -49,7 +49,7 @@ export class ChatAgent extends AIChatAgent<Env> {
 
     const result = streamText({
       model: workersai("@cf/zai-org/glm-4.7-flash"),
-      system: `You are an AI video game recommendation assistant. Help users discover games based on genre, platform, and personal preferences. Provide engaging and personalized recommendations to enhance their gaming experience.
+      system: `You are an AI video game recommendation assistant. Help users discover games based on genre, platform, and personal preferences. Provide engaging and personalized recommendations to enhance their gaming experience. Start by asking the user about their favorite game genres and platforms, their PC performance capability and their play style to recommend suitable games.
 
 ${getSchedulePrompt({ date: new Date() })}
 
@@ -72,8 +72,123 @@ If the user asks to schedule a task, use the schedule tool to schedule the task.
           execute: async ({ genre, platform }) => {
             return [
               { name: "Elden Ring", genre: "RPG", platform: "PC/Console" },
-              { name: "Hades", genre: "Roguelike", platform: "PC/Switch" }
+              { name: "Hades", genre: "Roguelike", platform: "PC/Switch" },
+              { name: "Mario Party", genre: "Party", platform: "Switch" },
+              { name: "Overwatch", genre: "FPS", platform: "PC/Console" },
+              { name: "The Legend of Zelda", genre: "Adventure", platform: "Switch" },
+              { name: "Job Simulator", genre: "Simulation", platform: "VR" }
             ];
+          }
+        }),
+
+        gamePerformanceRecommendation: tool({
+          description: "Recommend video games based on PC performance capability (low-end or high-end PCs).",
+          inputSchema: z.object({
+            performance: z.enum(["low", "high"])
+        }),
+        execute: async ({ performance }) => {
+
+          if (performance === "low") {
+            return {
+              performance: "Low-end PC",
+              games: [
+                { name: "Stardew Valley", genre: "Farming / RPG" },
+                { name: "Terraria", genre: "Sandbox Adventure" },
+                { name: "Undertale", genre: "Story RPG" },
+                { name: "Celeste", genre: "Platformer" },
+                { name: "Hollow Knight", genre: "Metroidvania" }
+              ]
+            };
+          }
+
+          if (performance === "high") {
+            return {
+              performance: "High-end PC",
+              games: [
+                { name: "Cyberpunk 2077", genre: "Open World RPG" },
+                { name: "Red Dead Redemption 2", genre: "Open World Adventure" },
+                { name: "Elden Ring", genre: "Action RPG" },
+                { name: "Microsoft Flight Simulator", genre: "Simulation" },
+                { name: "Starfield", genre: "Sci-Fi RPG" }
+              ]
+            };
+          }
+        }
+      }),
+
+        personalityGameRecommendation: tool({
+          description: "Recommend video games based on the player's personality and play style.",
+          inputSchema: z.object({
+            personality: z.enum([
+              "competitive",
+              "relaxed",
+              "story_lover",
+              "explorer",
+              "strategist"
+            ])
+          }),
+
+          execute: async ({ personality }) => {
+
+            if (personality === "competitive") {
+              return {
+                personality: "Competitive player",
+                games: [
+                  "Valorant",
+                  "Counter-Strike 2",
+                  "Rocket League",
+                  "Apex Legends"
+                ]
+              };
+            }
+
+            if (personality === "relaxed") {
+              return {
+                personality: "Relaxed / cozy player",
+                games: [
+                  "Stardew Valley",
+                  "Animal Crossing",
+                  "Spiritfarer",
+                  "Unpacking"
+                ]
+              };
+            }
+
+            if (personality === "story_lover") {
+              return {
+                personality: "Story-driven player",
+                games: [
+                  "The Witcher 3",
+                  "Life is Strange",
+                  "Detroit: Become Human",
+                  "Disco Elysium"
+                ]
+              };
+            }
+
+            if (personality === "explorer") {
+              return {
+                personality: "Explorer / open world fan",
+                games: [
+                  "Elden Ring",
+                  "Breath of the Wild",
+                  "Skyrim",
+                  "No Man's Sky"
+                ]
+              };
+            }
+
+            if (personality === "strategist") {
+              return {
+                personality: "Strategic thinker",
+                games: [
+                  "Civilization VI",
+                  "XCOM 2",
+                  "Total War: Warhammer 3",
+                  "Crusader Kings 3"
+                ]
+              };
+            }
           }
         }),
 
