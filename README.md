@@ -1,12 +1,18 @@
-# Agent Starter
+# Game Recommender agent
 
 ![npm i agents command](./npm-agents-banner.svg)
 
 <a href="https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/agents-starter"><img src="https://deploy.workers.cloudflare.com/button" alt="Deploy to Cloudflare"/></a>
 
-A starter template for building AI chat agents on Cloudflare, powered by the [Agents SDK](https://developers.cloudflare.com/agents/).
+An AI-powered video game recommendation assistant built using Cloudflare Workers AI and the Agents SDK.
 
-Uses Workers AI (no API key required), with tools for weather, timezone detection, calculations with approval, and task scheduling.
+This project helps users discover video games based on their:
+- preferred genre
+- gaming platform
+- PC performance
+- personality/playstyle
+
+The AI agent interacts with users through a chat interface and uses custom tools to generate tailored game recommendations.
 
 ## Quick start
 
@@ -21,10 +27,10 @@ Open [http://localhost:5173](http://localhost:5173) to see your agent in action.
 
 Try these prompts to see the different features:
 
-- **"What's the weather in Paris?"** — server-side tool (runs automatically)
-- **"What timezone am I in?"** — client-side tool (browser provides the answer)
-- **"Calculate 5000 \* 3"** — approval tool (asks you before running)
-- **"Remind me in 5 minutes to take a break"** — scheduling
+- **"What are some good co-op games for PC?"** — server-side tool (runs automatically)
+- **"What games would you recommend for my PC specs?"** — client-side tool (browser provides the answer)
+- **"I'm in the mood for a story-rich game, any suggestions?"** — approval tool (asks you before running)
+- **"Best productive ways to spend 30 minutes of gaming?"** — scheduling
 
 ## Project structure
 

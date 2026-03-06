@@ -1,6 +1,5 @@
 import { createWorkersAI } from "workers-ai-provider";
-import { routeAgentRequest, callable, type Schedule } from "agents";
-import { getSchedulePrompt, scheduleSchema } from "agents/schedule";
+import { routeAgentRequest, callable} from "agents";
 import { AIChatAgent, type OnChatMessageOptions } from "@cloudflare/ai-chat";
 import {
   streamText,
@@ -49,9 +48,22 @@ export class ChatAgent extends AIChatAgent<Env> {
 
     const result = streamText({
       model: workersai("@cf/zai-org/glm-4.7-flash"),
-      system: `You are an AI video game recommendation assistant. Help users discover games based on genre, platform, and personal preferences. Provide engaging and personalized recommendations to enhance their gaming experience. Start by asking the user about their favorite game genres and platforms, their PC performance capability and their play style to recommend suitable games.
+      system:`You are an AI video game recommendation assistant.
 
-${getSchedulePrompt({ date: new Date() })}
+              Your job is to help users discover games based on:
+              - genre
+              - platform (PC, PlayStation, Xbox, Switch)
+              - hardware performance (low-end or high-end)
+              - player personality (competitive, relaxed, story-driven)
+
+              When the user first asks for a recommendation, ask follow-up questions before suggesting games.
+
+              Ask things like:
+              - What platform do you play on?
+              - Do you prefer competitive or relaxing games?
+              - What type of performance does your PC have?
+
+              Then provide personalized recommendations with short explanations for each game.
 
 If the user asks to schedule a task, use the schedule tool to schedule the task.`,
       // Prune old tool calls to save tokens on long conversations
@@ -192,55 +204,6 @@ If the user asks to schedule a task, use the schedule tool to schedule the task.
           }
         }),
 
-        scheduleTask: tool({
-          description:
-            "Schedule a task to be executed at a later time. Use this when the user asks to be reminded or wants something done later.",
-          inputSchema: scheduleSchema,
-          execute: async ({ when, description }) => {
-            if (when.type === "no-schedule") {
-              return "Not a valid schedule input";
-            }
-            const input =
-              when.type === "scheduled"
-                ? when.date
-                : when.type === "delayed"
-                  ? when.delayInSeconds
-                  : when.type === "cron"
-                    ? when.cron
-                    : null;
-            if (!input) return "Invalid schedule type";
-            try {
-              this.schedule(input, "executeTask", description);
-              return `Task scheduled: "${description}" (${when.type}: ${input})`;
-            } catch (error) {
-              return `Error scheduling task: ${error}`;
-            }
-          }
-        }),
-
-        getScheduledTasks: tool({
-          description: "List all tasks that have been scheduled",
-          inputSchema: z.object({}),
-          execute: async () => {
-            const tasks = this.getSchedules();
-            return tasks.length > 0 ? tasks : "No scheduled tasks found.";
-          }
-        }),
-
-        cancelScheduledTask: tool({
-          description: "Cancel a scheduled task by its ID",
-          inputSchema: z.object({
-            taskId: z.string().describe("The ID of the task to cancel")
-          }),
-          execute: async ({ taskId }) => {
-            try {
-              this.cancelSchedule(taskId);
-              return `Task ${taskId} cancelled.`;
-            } catch (error) {
-              return `Error cancelling task: ${error}`;
-            }
-          }
-        })
       },
       stopWhen: stepCountIs(5),
       abortSignal: options?.abortSignal
@@ -249,22 +212,6 @@ If the user asks to schedule a task, use the schedule tool to schedule the task.
     return result.toUIMessageStreamResponse();
   }
 
-  async executeTask(description: string, _task: Schedule<string>) {
-    // Do the actual work here (send email, call API, etc.)
-    console.log(`Executing scheduled task: ${description}`);
-
-    // Notify connected clients via a broadcast event.
-    // We use broadcast() instead of saveMessages() to avoid injecting
-    // into chat history — that would cause the AI to see the notification
-    // as new context and potentially loop.
-    this.broadcast(
-      JSON.stringify({
-        type: "scheduled-task",
-        description,
-        timestamp: new Date().toISOString()
-      })
-    );
-  }
 }
 
 export default {

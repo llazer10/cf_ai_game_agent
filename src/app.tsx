@@ -338,7 +338,7 @@ function Chat() {
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <h1 className="text-lg font-semibold text-kumo-default">
-              <span className="mr-2">⛅</span>Agent Starter
+              <span className="mr-2">🎲</span>Game Recommender Agent
             </h1>
             <Badge variant="secondary">
               <ChatCircleDotsIcon size={12} weight="bold" className="mr-1" />
@@ -552,10 +552,10 @@ function Chat() {
               contents={
                 <div className="flex flex-wrap justify-center gap-2">
                   {[
-                    "What's the weather in Paris?",
-                    "What timezone am I in?",
-                    "Calculate 5000 * 3",
-                    "Remind me in 5 minutes to take a break"
+                    "What are some good co-op games for PC?",
+                    "What games would you recommend for my PC specs?",
+                    "I'm in the mood for a story-rich game, any suggestions?",
+                    "Best productive ways to spend 30 minutes of gaming?",
                   ].map((prompt) => (
                     <Button
                       key={prompt}
