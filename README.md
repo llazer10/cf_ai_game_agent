@@ -12,8 +12,9 @@ The agent combines AI reasoning with tool-based APIs to generate intelligent rec
 
 ## Quick start
 
+Install dependicies and do the following
 ```bash
-npx create-cloudflare@latest --template cloudflare/agents-starter
+npm install
 cd agents-starter
 npm install
 npm run dev
@@ -26,7 +27,6 @@ Try these prompts to see the different features:
 - **"What are some good co-op games for PC?"** — server-side tool (runs automatically)
 - **"What games would you recommend for my PC specs?"** — client-side tool (browser provides the answer)
 - **"I'm in the mood for a story-rich game, any suggestions?"** — approval tool (asks you before running)
-- **"Best productive ways to spend 30 minutes of gaming?"** — scheduling
 
 ## Tools implemented
 
@@ -79,7 +79,7 @@ and recommends games suitable for those hardware capabilities.
 
 ```
 src/
-  server.ts    # Chat agent with tools and scheduling
+  server.ts    # Game agent with tools
   app.tsx      # Chat UI built with Kumo components
   client.tsx   # React entry point
   styles.css   # Tailwind + Kumo styles
@@ -87,7 +87,7 @@ src/
 
 ## What's included
 
-- **AI Chat** — Streaming responses powered by Workers AI via `AIChatAgent`
+- **AI Powered game recommendations**
 - **Three tool patterns** — server-side auto-execute, client-side (browser), and human-in-the-loop approval
 - **Scheduling** — one-time, delayed, and recurring (cron) tasks
 - **Reasoning display** — shows model thinking as it streams, collapses when done
