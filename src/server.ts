@@ -56,16 +56,16 @@ export class ChatAgent extends AIChatAgent<Env> {
               - hardware performance (low-end or high-end)
               - player personality (competitive, relaxed, story-driven)
 
-              When the user first asks for a recommendation, ask follow-up questions before suggesting games.
+              Ask follow-up questions before recommending games.
 
-              Ask things like:
-              - What platform do you play on?
-              - Do you prefer competitive or relaxing games?
-              - What type of performance does your PC have?
+              When the user asks for recommendations:
+              - Use searchRealGames for real game searches
+              - Use gamePerformanceRecommendation for PC performance
+              - Use personalityGameRecommendation for playstyle suggestions
 
-              Then provide personalized recommendations with short explanations for each game.
+              Always explain why the games fit the player.`,
 
-If the user asks to schedule a task, use the schedule tool to schedule the task.`,
+
       // Prune old tool calls to save tokens on long conversations
       messages: pruneMessages({
         messages: await convertToModelMessages(this.messages),
@@ -75,6 +75,71 @@ If the user asks to schedule a task, use the schedule tool to schedule the task.
         // MCP tools from connected servers
         ...mcpTools,
 
+        searchRealGames: tool({
+          description: "Search for real games from the RAWG database by genre and optional platform",
+          inputSchema: z.object({
+            genre: z.string().describe("Game genre like rpg, action, strategy"),
+            platform: z.string().optional().describe("Optional platform like pc, playstation, xbox")
+          }),
+
+          execute: async ({ genre, platform }) => {
+
+            const genreMap: any = {
+              rpg: "role-playing-games-rpg",
+              action: "action",
+              adventure: "adventure",
+              strategy: "strategy",
+              shooter: "shooter",
+              simulation: "simulation",
+              indie: "indie",
+
+              // Smart translations
+              "open world": "adventure",
+              exploration: "adventure",
+              scifi: "action",
+              "sci-fi": "action",
+              story: "adventure"
+            };
+
+            const genreKey = genre.toLowerCase().trim();
+            const genreSlug = genreMap[genreKey] || genreKey;
+
+            let url = `https://api.rawg.io/api/games?key=${this.env.RAWG_API_KEY}&genres=${genreSlug}&ordering=-rating&page_size=5`;
+
+            const platformMap: any = {
+              pc: 4,
+              playstation: 18,
+              xbox: 1,
+              switch: 7
+            };
+
+            if (platform && platformMap[platform.toLowerCase()]) {
+              url += `&platforms=${platformMap[platform.toLowerCase()]}`;
+              }
+
+
+            const res = await fetch(url);
+
+            if (!res.ok) {
+              return { error: `RAWG API error: ${res.status}` };
+            }
+
+            const data: any = await res.json();
+
+            if (!data.results || data.results.length === 0) {
+              return { message: "No games found." };
+            }
+
+            return data.results.map((g: any) => ({
+              name: g.name,
+              rating: g.rating,
+              released: g.released,
+              platforms: g.platforms?.map((p: any) => p.platform.name)
+            }));
+          }
+        }),
+
+
         getGameRecommendations: tool({
           description: "Recommend video games based on genre",
           inputSchema: z.object({
@@ -82,14 +147,17 @@ If the user asks to schedule a task, use the schedule tool to schedule the task.
             platform: z.string().optional()
           }),
           execute: async ({ genre, platform }) => {
-            return [
+            const allGames = [
               { name: "Elden Ring", genre: "RPG", platform: "PC/Console" },
               { name: "Hades", genre: "Roguelike", platform: "PC/Switch" },
               { name: "Mario Party", genre: "Party", platform: "Switch" },
               { name: "Overwatch", genre: "FPS", platform: "PC/Console" },
               { name: "The Legend of Zelda", genre: "Adventure", platform: "Switch" },
-              { name: "Job Simulator", genre: "Simulation", platform: "VR" }
             ];
+            return allGames.filter(g =>
+              g.genre.toLowerCase().includes(genre.toLowerCase()) &&
+              (!platform || g.platform.toLowerCase().includes(platform.toLowerCase()))
+            );
           }
         }),
 
@@ -128,81 +196,81 @@ If the user asks to schedule a task, use the schedule tool to schedule the task.
         }
       }),
 
-        personalityGameRecommendation: tool({
-          description: "Recommend video games based on the player's personality and play style.",
-          inputSchema: z.object({
-            personality: z.enum([
-              "competitive",
-              "relaxed",
-              "story_lover",
-              "explorer",
-              "strategist"
-            ])
-          }),
+          personalityGameRecommendation: tool({
+            description: "Recommend video games based on the player's personality and play style.",
+            inputSchema: z.object({
+              personality: z.enum([
+                "competitive",
+                "relaxed",
+                "story_lover",
+                "explorer",
+                "strategist"
+              ])
+            }),
 
-          execute: async ({ personality }) => {
+            execute: async ({ personality }) => {
 
-            if (personality === "competitive") {
-              return {
-                personality: "Competitive player",
-                games: [
-                  "Valorant",
-                  "Counter-Strike 2",
-                  "Rocket League",
-                  "Apex Legends"
-                ]
-              };
+              if (personality === "competitive") {
+                return {
+                  personality: "Competitive player",
+                  games: [
+                    "Valorant",
+                    "Counter-Strike 2",
+                    "Rocket League",
+                    "Apex Legends"
+                  ]
+                };
+              }
+
+              if (personality === "relaxed") {
+                return {
+                  personality: "Relaxed / cozy player",
+                  games: [
+                    "Stardew Valley",
+                    "Animal Crossing",
+                    "Spiritfarer",
+                    "Unpacking"
+                  ]
+                };
+              }
+
+              if (personality === "story_lover") {
+                return {
+                  personality: "Story-driven player",
+                  games: [
+                    "The Witcher 3",
+                    "Life is Strange",
+                    "Detroit: Become Human",
+                    "Disco Elysium"
+                  ]
+                };
+              }
+
+              if (personality === "explorer") {
+                return {
+                  personality: "Explorer / open world fan",
+                  games: [
+                    "Elden Ring",
+                    "Breath of the Wild",
+                    "Skyrim",
+                    "No Man's Sky"
+                  ]
+                };
+              }
+
+              if (personality === "strategist") {
+                return {
+                  personality: "Strategic thinker",
+                  games: [
+                    "Civilization VI",
+                    "XCOM 2",
+                    "Total War: Warhammer 3",
+                    "Crusader Kings 3"
+                  ]
+                };
+              }
             }
-
-            if (personality === "relaxed") {
-              return {
-                personality: "Relaxed / cozy player",
-                games: [
-                  "Stardew Valley",
-                  "Animal Crossing",
-                  "Spiritfarer",
-                  "Unpacking"
-                ]
-              };
-            }
-
-            if (personality === "story_lover") {
-              return {
-                personality: "Story-driven player",
-                games: [
-                  "The Witcher 3",
-                  "Life is Strange",
-                  "Detroit: Become Human",
-                  "Disco Elysium"
-                ]
-              };
-            }
-
-            if (personality === "explorer") {
-              return {
-                personality: "Explorer / open world fan",
-                games: [
-                  "Elden Ring",
-                  "Breath of the Wild",
-                  "Skyrim",
-                  "No Man's Sky"
-                ]
-              };
-            }
-
-            if (personality === "strategist") {
-              return {
-                personality: "Strategic thinker",
-                games: [
-                  "Civilization VI",
-                  "XCOM 2",
-                  "Total War: Warhammer 3",
-                  "Crusader Kings 3"
-                ]
-              };
-            }
-          }
-        }),
+          })
 
       },
       stopWhen: stepCountIs(5),
