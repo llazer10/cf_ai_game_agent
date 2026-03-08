@@ -33,7 +33,7 @@ Try these prompts to see the different features:
 1. searchRealGames
 This tool queries the RAWG video game database to fetch real games based on a genre and optional platform.
 
-To run this project yourself you need your own RAWG API key or any other game database API key.
+To use this tool yourself you need your own RAWG API key or any other game database API key.
 (1). Create a free acount at the RAWG website: https://rawg.io
 (2). Generate the API Key
 (3). Add the API key to your Cloudflare Worker as a secret:
